@@ -1,0 +1,5 @@
+selenium==4.15.2
+pandas==2.1.4
+networkx==3.2.1
+matplotlib==3.8.2
+python-dotenv==1.0.0
