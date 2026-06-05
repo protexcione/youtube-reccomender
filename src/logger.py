@@ -17,8 +17,10 @@ def setup_logging(name: str = "yt_recommender", level: int = logging.INFO) -> lo
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
 
-    # Console
+    # Console (UTF-8 forzato per Windows)
     ch = logging.StreamHandler(sys.stdout)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     ch.setFormatter(fmt)
     logger.addHandler(ch)
 
