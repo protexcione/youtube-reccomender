@@ -1,63 +1,81 @@
 """
-Test Martedì: verifica che credenziali e login funzionino per UN profilo.
-Utile per testare prima di eseguire setup_profiles.py su tutti e 5.
+Test Martedì: verifica che i 5 profili Chrome isolati si inizializzino correttamente.
 
-Esegui con: python test_login.py scienza
+Esegui con: python test_login.py
+Oppure un profilo solo: python test_login.py scienza
 """
 
 import sys
 import time
+from selenium.webdriver.common.by import By
 from src.logger import setup_logging
+from src.config import PROFILES
 from src.driver import get_driver
-from src.credentials import get_credentials, get_all_credentials
-from src.youtube_login import ensure_logged_in
 
 logger = setup_logging("yt_recommender")
 
 
-def test_credentials():
-    print("--- Test file .env ---")
-    creds = get_all_credentials()
-    if not creds:
-        print("  ❌ Nessuna credenziale trovata nel file .env")
-        print("  → Copia .env.example in .env e inserisci le tue credenziali")
-        return False
-    for profile, (email, _) in creds.items():
-        print(f"  ✅ {profile:<10} → {email}")
-    return True
-
-
-def test_single_login(profile_name: str):
-    print(f"\n--- Test login profilo '{profile_name}' ---")
-    try:
-        email, password = get_credentials(profile_name)
-        print(f"  Email: {email}")
-    except ValueError as e:
-        print(f"  ❌ {e}")
-        return False
-
-    print("  Avvio Chrome... (può richiedere qualche secondo)")
+def test_profile_isolation(profile_name: str) -> bool:
+    print(f"\n--- Test profilo '{profile_name}' ---")
     driver = get_driver(profile_name)
     try:
-        ok = ensure_logged_in(driver, email, password, profile_name)
-        if ok:
-            print(f"  ✅ Login riuscito per '{profile_name}'")
+        driver.get("https://www.youtube.com")
+        time.sleep(4)
+
+        # Accetta cookie se compare
+        try:
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+            btn = WebDriverWait(driver, 5).until(
+                EC.element_to_be_clickable((By.XPATH,
+                    "//button[.//span[contains(text(),'Accetta') or contains(text(),'Accept')]]"
+                ))
+            )
+            btn.click()
+            time.sleep(2)
+        except Exception:
+            pass
+
+        # Verifica che siamo su YouTube
+        assert "YouTube" in driver.title, f"Titolo inatteso: {driver.title}"
+        print(f"  ✅ YouTube caricato: {driver.title}")
+
+        # Verifica che NON sia loggato (nessun avatar)
+        avatars = driver.find_elements(By.CSS_SELECTOR, "button#avatar-btn")
+        if avatars:
+            print(f"  ⚠️  Profilo loggato con un account Google")
         else:
-            print(f"  ❌ Login fallito per '{profile_name}'")
-            print("     → Prova ad aprire Chrome manualmente e controlla se ci sono")
-            print("       verifiche di sicurezza Google sull'account")
-        time.sleep(2)
-        return ok
+            print(f"  ✅ Profilo anonimo — nessun account collegato")
+
+        # Verifica isolamento cookie: cartella profilo esiste
+        from src.config import PROFILES_DIR
+        profile_dir = PROFILES_DIR / profile_name
+        assert profile_dir.exists(), f"Cartella profilo mancante: {profile_dir}"
+        print(f"  ✅ Cookie isolati in: {profile_dir}")
+
+        return True
+    except Exception as e:
+        print(f"  ❌ Errore: {e}")
+        return False
     finally:
         driver.quit()
 
 
 if __name__ == "__main__":
-    profile = sys.argv[1] if len(sys.argv) > 1 else "scienza"
+    if len(sys.argv) > 1:
+        profiles = [sys.argv[1].lower()]
+    else:
+        profiles = list(PROFILES.keys())
 
-    ok_env = test_credentials()
-    if not ok_env:
-        sys.exit(1)
+    results = {}
+    for p in profiles:
+        results[p] = test_profile_isolation(p)
+        time.sleep(2)
 
-    ok_login = test_single_login(profile)
-    sys.exit(0 if ok_login else 1)
+    print("\n" + "=" * 50)
+    print("RIEPILOGO TEST PROFILI")
+    print("=" * 50)
+    for p, ok in results.items():
+        print(f"  {p:<10} {'✅ OK' if ok else '❌ Fallito'}")
+
+    sys.exit(0 if all(results.values()) else 1)
