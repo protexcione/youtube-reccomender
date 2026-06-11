@@ -18,15 +18,26 @@ SEARCH_URL = "https://www.youtube.com/results?search_query={query}&sp=EgIQAQ%3D%
 # sp=EgIQAQ== filtra solo video (esclude playlist e canali)
 
 
-def search_videos(driver, query: str, max_results: int = 5) -> list[dict]:
+def search_videos(driver, query: str, max_results: int = 5, retries: int = 3) -> list[dict]:
     """
     Cerca su YouTube e restituisce fino a max_results video.
     Ogni elemento: {'video_id': str, 'title': str, 'channel': str}
+    Riprova automaticamente in caso di timeout (max retries volte).
     """
     url = SEARCH_URL.format(query=query.replace(" ", "+"))
-    logger.info("Ricerca: '%s'", query)
-    driver.get(url)
-    time.sleep(random.uniform(2, 4))
+
+    for attempt in range(1, retries + 1):
+        try:
+            logger.info("Ricerca: '%s' (tentativo %d/%d)", query, attempt, retries)
+            driver.get(url)
+            time.sleep(random.uniform(2, 4))
+            break  # caricamento riuscito
+        except TimeoutException:
+            logger.warning("Timeout caricamento pagina per '%s' — tentativo %d/%d", query, attempt, retries)
+            if attempt == retries:
+                logger.error("Ricerca '%s' fallita dopo %d tentativi", query, retries)
+                return []
+            time.sleep(5 * attempt)  # backoff: 5s, 10s, 15s
 
     try:
         WebDriverWait(driver, 15).until(

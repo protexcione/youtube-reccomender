@@ -93,7 +93,11 @@ def main():
         if profile not in PROFILES:
             logger.error("Profilo '%s' non esiste. Disponibili: %s", profile, list(PROFILES.keys()))
             continue
-        results[profile] = run_profile(profile)
+        try:
+            results[profile] = run_profile(profile)
+        except Exception as e:
+            logger.error("[%s] Crash inatteso: %s — continuo con il prossimo profilo", profile, e)
+            results[profile] = False
         if len(profiles) > 1:
             pause = random.uniform(10, 20)
             logger.info("Pausa %ds prima del prossimo profilo...", int(pause))
