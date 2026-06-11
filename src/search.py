@@ -51,9 +51,19 @@ def search_videos(driver, query: str, max_results: int = 5) -> list[dict]:
             video_id = href.split("watch?v=")[1].split("&")[0]
 
             try:
-                channel = renderer.find_element(
-                    By.CSS_SELECTOR, "ytd-channel-name a"
-                ).text
+                # YouTube usa selettori diversi a seconda della versione
+                for selector in [
+                    "ytd-channel-name a",
+                    "#channel-name a",
+                    "#channel-name yt-formatted-string",
+                    "yt-formatted-string#text.ytd-channel-name",
+                ]:
+                    els = renderer.find_elements(By.CSS_SELECTOR, selector)
+                    if els and els[0].text.strip():
+                        channel = els[0].text.strip()
+                        break
+                else:
+                    channel = "Sconosciuto"
             except Exception:
                 channel = "Sconosciuto"
 
