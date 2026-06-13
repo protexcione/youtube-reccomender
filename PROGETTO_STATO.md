@@ -67,8 +67,8 @@ youtube-reccomender/
 | Lunedi | Setup ambiente, struttura cartelle, DB, logger | ✅ FATTO | `src/config.py`, `src/database.py`, `src/logger.py`, `src/driver.py` |
 | Martedi | 5 profili Chrome isolati con cookie separati (no login Google) | ✅ FATTO | `setup_profiles.py`, profili in `profiles/` |
 | Mercoledi | Script seed watching: ogni profilo guarda 10 video | ✅ FATTO | `src/search.py`, `src/watcher.py`, `seed_watch.py` — 50 video guardati |
-| Giovedi | Cookie persistence + profili Chrome verificati | ⏳ PROSSIMO | — |
-| Venerdi | Test end-to-end: 1 profilo completo da zero a seed watching | ❌ DA FARE | — |
+| Giovedi | Cookie persistence + profili Chrome verificati | ✅ FATTO | `verify_cookies.py`, `test_cookies.py`, snapshot in `profiles/_snapshots/` |
+| Venerdi | Test end-to-end: 1 profilo completo da zero a seed watching | ⏳ PROSSIMO | — |
 | Sabato | Debug + hardening (gestione crash, rate limiting) | ❌ DA FARE | — |
 
 ### SETTIMANA 2 — Raccolta Dati 7 giorni (25 ore)
@@ -136,6 +136,11 @@ python test_selenium.py
 python test_login.py scienza
 python test_seed_watch.py scienza
 
+# Giovedi: verifica cookie
+python test_cookies.py                  # test senza browser (struttura + mock)
+python verify_cookies.py                # verifica completa con browser (tutti i profili)
+python verify_cookies.py scienza        # solo un profilo
+
 # Setup profili
 python setup_profiles.py
 
@@ -144,5 +149,5 @@ python seed_watch.py scienza
 python seed_watch.py
 
 # Aggiorna da remoto
-git pull origin claude/lucid-rubin-v3oPb
+git pull origin claude/relaxed-shannon-y30nij
 ```
