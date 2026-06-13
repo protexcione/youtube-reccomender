@@ -49,10 +49,13 @@ def get_driver(profile_name: str) -> webdriver.Chrome:
     driver.implicitly_wait(IMPLICIT_WAIT)
 
     # Rimuove il flag webdriver dal navigator JS
-    driver.execute_cdp_cmd(
-        "Page.addScriptToEvaluateOnNewDocument",
-        {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
-    )
+    try:
+        driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
+        )
+    except Exception as e:
+        logger.warning("CDP webdriver patch fallita (ignorabile): %s", e)
 
     logger.info("Driver creato per profilo '%s' → %s", profile_name, profile_dir)
     return driver

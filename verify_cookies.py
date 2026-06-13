@@ -110,7 +110,7 @@ def test_cookie_persistence(profile_name: str) -> bool:
     finally:
         driver.quit()
 
-    time.sleep(2)
+    time.sleep(5)
 
     # --- Sessione B: verifica sentinella sopravvissuto ---
     driver = get_driver(profile_name)
@@ -287,14 +287,26 @@ def main():
 
         # Test 2: persistenza
         key_pers = f"Persistenza '{profile}'"
-        results[key_pers] = test_cookie_persistence(profile)
+        try:
+            results[key_pers] = test_cookie_persistence(profile)
+        except Exception as e:
+            print(f"  ❌ Errore durante test persistenza '{profile}': {e}")
+            results[key_pers] = False
+
+        # Pausa tra profili per lasciare che Chrome rilasci le risorse
+        time.sleep(5)
 
     # Test 3: isolamento (solo se almeno 2 profili)
     if len(target_profiles) >= 2:
         for i in range(len(target_profiles) - 1):
             a, b = target_profiles[i], target_profiles[i + 1]
             key_iso = f"Isolamento '{a}' vs '{b}'"
-            results[key_iso] = test_cookie_isolation(a, b)
+            try:
+                results[key_iso] = test_cookie_isolation(a, b)
+            except Exception as e:
+                print(f"  ❌ Errore isolamento '{a}' vs '{b}': {e}")
+                results[key_iso] = False
+            time.sleep(5)
     elif len(target_profiles) == 1 and len(PROFILES) >= 2:
         # Testa isolamento tra il profilo scelto e il primo diverso
         others = [p for p in PROFILES if p != target_profiles[0]]
