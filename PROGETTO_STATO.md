@@ -44,7 +44,10 @@ youtube-reccomender/
 ├── test_setup.py       # test Lunedi: struttura + DB + logger
 ├── test_selenium.py    # test Chrome su YouTube
 ├── test_login.py       # test isolamento profili
-└── test_seed_watch.py  # test ricerca + visione per profilo singolo
+├── test_seed_watch.py  # test ricerca + visione per profilo singolo
+├── verify_cookies.py   # test Giovedi: persistenza + isolamento cookie (con browser)
+├── test_cookies.py     # test Giovedi: struttura + mock driver (senza browser)
+└── e2e_test.py         # test Venerdi: pipeline completa da zero a seed watching
 ```
 
 ## 5 Profili virtuali
@@ -68,8 +71,8 @@ youtube-reccomender/
 | Martedi | 5 profili Chrome isolati con cookie separati (no login Google) | ✅ FATTO | `setup_profiles.py`, profili in `profiles/` |
 | Mercoledi | Script seed watching: ogni profilo guarda 10 video | ✅ FATTO | `src/search.py`, `src/watcher.py`, `seed_watch.py` — 50 video guardati |
 | Giovedi | Cookie persistence + profili Chrome verificati | ✅ FATTO | `verify_cookies.py`, `test_cookies.py`, snapshot in `profiles/_snapshots/` |
-| Venerdi | Test end-to-end: 1 profilo completo da zero a seed watching | ⏳ PROSSIMO | — |
-| Sabato | Debug + hardening (gestione crash, rate limiting) | ❌ DA FARE | — |
+| Venerdi | Test end-to-end: 1 profilo completo da zero a seed watching | ✅ FATTO | `e2e_test.py` — 7 step, report con metriche |
+| Sabato | Debug + hardening (gestione crash, rate limiting) | ⏳ PROSSIMO | — |
 
 ### SETTIMANA 2 — Raccolta Dati 7 giorni (25 ore)
 
@@ -140,6 +143,11 @@ python test_seed_watch.py scienza
 python test_cookies.py                  # test senza browser (struttura + mock)
 python verify_cookies.py                # verifica completa con browser (tutti i profili)
 python verify_cookies.py scienza        # solo un profilo
+
+# Venerdi: test end-to-end
+python e2e_test.py                      # usa profilo 'scienza' di default
+python e2e_test.py cucina               # profilo specifico
+python e2e_test.py scienza --keep-data  # non azzera il DB prima
 
 # Setup profili
 python setup_profiles.py
