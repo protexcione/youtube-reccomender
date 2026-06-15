@@ -50,10 +50,24 @@ def init_db():
 
                 CREATE INDEX IF NOT EXISTS idx_recs_profile_day
                     ON recommendations (profile, day);
-
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_seed_dedup
-                    ON seed_watches (profile, video_id);
             """)
+
+            # Aggiunge l'indice UNIQUE solo se non esiste già.
+            # Prima rimuove eventuali duplicati rimasti da run precedenti
+            # (mantiene solo la riga con id più alto per ogni coppia profile/video_id).
+            idx_exists = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='index' AND name='idx_seed_dedup'"
+            ).fetchone()
+            if not idx_exists:
+                conn.executescript("""
+                    DELETE FROM seed_watches
+                    WHERE id NOT IN (
+                        SELECT MAX(id) FROM seed_watches GROUP BY profile, video_id
+                    );
+                    CREATE UNIQUE INDEX idx_seed_dedup ON seed_watches (profile, video_id);
+                """)
+                logger.info("Indice UNIQUE creato su seed_watches (dedup eseguito)")
+
         logger.info("Database inizializzato: %s", DB_PATH)
     except sqlite3.Error as e:
         logger.error("Errore inizializzazione DB: %s", e)

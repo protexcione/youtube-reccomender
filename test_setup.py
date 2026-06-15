@@ -39,10 +39,12 @@ def test_database():
     try:
         init_db()
         print(f"  ✅ DB creato: {DB_PATH}")
+        # insert_seed_watch usa INSERT OR IGNORE: sicuro da rieseguire più volte
         insert_seed_watch("scienza", "test123", "Test Video", "Test Channel")
         print("  ✅ Insert seed_watch OK")
         return True
     except Exception as e:
+        print(f"  Errore inizializzazione DB: {e}")
         print(f"  ❌ {e}")
         return False
 
