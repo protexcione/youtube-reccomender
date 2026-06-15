@@ -97,8 +97,9 @@ def test_driver_factory_no_shared_state() -> bool:
     dirs_seen = {}
     all_ok = True
 
-    # Patch webdriver.Chrome per non aprire browser
-    with patch("src.driver.webdriver.Chrome") as mock_chrome:
+    # Patch webdriver.Chrome e _check_chrome_available per non aprire browser
+    with patch("src.driver.webdriver.Chrome") as mock_chrome, \
+         patch("src.driver._check_chrome_available", return_value="/mock/chrome"):
         mock_instance = MagicMock()
         mock_chrome.return_value = mock_instance
 
