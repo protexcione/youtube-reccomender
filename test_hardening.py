@@ -7,6 +7,7 @@ Esegui con:
   python test_hardening.py
 """
 
+import gc
 import sys
 import sqlite3
 import tempfile
@@ -101,7 +102,12 @@ class TestDatabase(unittest.TestCase):
         self.db_path = Path(self.tmp.name)
 
     def tearDown(self):
-        self.db_path.unlink(missing_ok=True)
+        # Su Windows SQLite tiene il file aperto finché il GC non chiude le connessioni
+        gc.collect()
+        try:
+            self.db_path.unlink(missing_ok=True)
+        except PermissionError:
+            pass  # file ancora in uso — Windows lo pulirà alla chiusura del processo
 
     def _get_module(self):
         """Carica database con DB_PATH patchato."""
