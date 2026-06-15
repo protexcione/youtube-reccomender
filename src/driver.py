@@ -3,6 +3,8 @@ Factory per istanze Chrome Selenium isolate per profilo.
 Ogni profilo usa una cartella dati separata → cookie/sessione indipendenti.
 """
 
+import os
+import sys
 import logging
 import shutil
 from pathlib import Path
@@ -17,12 +19,29 @@ logger = logging.getLogger(__name__)
 # Tempo massimo per l'avvio di Chrome (secondi)
 _DRIVER_STARTUP_TIMEOUT = 30
 
+# Percorsi Windows dove Chrome è tipicamente installato (non nel PATH)
+_WIN_CHROME_PATHS = [
+    r"%ProgramFiles%\Google\Chrome\Application\chrome.exe",
+    r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe",
+    r"%LocalAppData%\Google\Chrome\Application\chrome.exe",
+]
+
 
 def _check_chrome_available():
-    """Verifica che chrome/chromium sia disponibile nel PATH."""
+    """
+    Verifica che chrome/chromium sia disponibile.
+    Controlla PATH (Linux/Mac) e percorsi standard di installazione (Windows).
+    """
     for binary in ("google-chrome", "chromium-browser", "chromium", "chrome"):
         if shutil.which(binary):
             return binary
+
+    if sys.platform == "win32":
+        for template in _WIN_CHROME_PATHS:
+            path = os.path.expandvars(template)
+            if os.path.exists(path):
+                return path
+
     return None
 
 
