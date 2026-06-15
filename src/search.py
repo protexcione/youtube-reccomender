@@ -12,6 +12,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+from src.rate_limiter import check_rate_limited, register_success, register_block, backoff_wait
+
 logger = logging.getLogger("yt_recommender")
 
 SEARCH_URL = "https://www.youtube.com/results?search_query={query}&sp=EgIQAQ%3D%3D"
@@ -22,7 +24,7 @@ def search_videos(driver, query: str, max_results: int = 5, retries: int = 3) ->
     """
     Cerca su YouTube e restituisce fino a max_results video.
     Ogni elemento: {'video_id': str, 'title': str, 'channel': str}
-    Riprova automaticamente in caso di timeout (max retries volte).
+    Riprova automaticamente in caso di timeout o rate limiting.
     """
     url = SEARCH_URL.format(query=query.replace(" ", "+"))
 
@@ -31,21 +33,45 @@ def search_videos(driver, query: str, max_results: int = 5, retries: int = 3) ->
             logger.info("Ricerca: '%s' (tentativo %d/%d)", query, attempt, retries)
             driver.get(url)
             time.sleep(random.uniform(2, 4))
+
+            # Controlla se YouTube ha rilevato scraping automatizzato
+            if check_rate_limited(driver):
+                register_block()
+                if attempt < retries:
+                    backoff_wait()
+                    continue
+                else:
+                    logger.error("Rate limiting persistente per '%s' — skip", query)
+                    return []
+
             break  # caricamento riuscito
+
         except TimeoutException:
             logger.warning("Timeout caricamento pagina per '%s' — tentativo %d/%d", query, attempt, retries)
             if attempt == retries:
                 logger.error("Ricerca '%s' fallita dopo %d tentativi", query, retries)
                 return []
             time.sleep(5 * attempt)  # backoff: 5s, 10s, 15s
+        except Exception as e:
+            logger.error("Errore inatteso durante driver.get() per '%s': %s", query, e)
+            if attempt == retries:
+                return []
+            time.sleep(5 * attempt)
 
     try:
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "ytd-video-renderer"))
         )
     except TimeoutException:
-        logger.warning("Timeout risultati ricerca per '%s'", query)
+        # Potrebbe essere rate limiting senza redirect (pagina vuota)
+        if check_rate_limited(driver):
+            register_block()
+            logger.warning("Rate limiting rilevato dopo attesa risultati per '%s'", query)
+        else:
+            logger.warning("Timeout risultati ricerca per '%s'", query)
         return []
+
+    register_success()
 
     results = []
     renderers = driver.find_elements(By.CSS_SELECTOR, "ytd-video-renderer")

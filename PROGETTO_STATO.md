@@ -72,7 +72,7 @@ youtube-reccomender/
 | Mercoledi | Script seed watching: ogni profilo guarda 10 video | ✅ FATTO | `src/search.py`, `src/watcher.py`, `seed_watch.py` — 50 video guardati |
 | Giovedi | Cookie persistence + profili Chrome verificati | ✅ FATTO | `verify_cookies.py`, `test_cookies.py`, snapshot in `profiles/_snapshots/` |
 | Venerdi | Test end-to-end: 1 profilo completo da zero a seed watching | ✅ FATTO | `e2e_test.py` — 7 step, report con metriche |
-| Sabato | Debug + hardening (gestione crash, rate limiting) | ⏳ PROSSIMO | — |
+| Sabato | Debug + hardening (gestione crash, rate limiting) | ✅ FATTO | `src/rate_limiter.py`, hardening `src/database.py`, `src/driver.py`, `src/search.py`, `src/watcher.py`, `seed_watch.py`, `test_hardening.py` (26/26 test) |
 
 ### SETTIMANA 2 — Raccolta Dati 7 giorni (25 ore)
 
