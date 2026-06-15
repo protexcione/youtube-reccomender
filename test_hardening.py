@@ -219,11 +219,16 @@ class TestDriver(unittest.TestCase):
         safe_quit(driver)  # non deve propagare l'eccezione
 
     @patch("src.driver.shutil.which", return_value=None)
-    def test_get_driver_raises_if_no_chrome(self, mock_which):
-        from src.driver import get_driver
-        with self.assertRaises(RuntimeError) as ctx:
-            get_driver("scienza")
-        self.assertIn("Chrome", str(ctx.exception))
+    @patch("src.driver.webdriver.Chrome")
+    def test_get_driver_logs_warning_if_no_chrome_in_path(self, mock_chrome, mock_which):
+        # Chrome non nel PATH: get_driver non blocca, lascia che Selenium tenti
+        from src.driver import get_driver, _check_chrome_available
+        mock_chrome.return_value = MagicMock()
+        result = _check_chrome_available()
+        self.assertIsNone(result)  # check restituisce None ma non solleva
+        # get_driver deve comunque procedere (non RuntimeError)
+        driver = get_driver("scienza")
+        self.assertIsNotNone(driver)
 
     @patch("src.driver.shutil.which", return_value="/usr/bin/google-chrome")
     @patch("src.driver.webdriver.Chrome")

@@ -49,14 +49,12 @@ def get_driver(profile_name: str) -> webdriver.Chrome:
     """
     Restituisce un driver Chrome con profilo persistente isolato.
     I cookie vengono salvati in profiles/<profile_name>/ tra una sessione e l'altra.
-    Solleva RuntimeError se Chrome non è disponibile o non parte.
+    Solleva RuntimeError se Chrome non parte.
     """
     chrome_binary = _check_chrome_available()
     if chrome_binary is None:
-        raise RuntimeError(
-            "Chrome/Chromium non trovato nel PATH. "
-            "Installare con: sudo apt install chromium-browser"
-        )
+        # Avviso non bloccante: Selenium/ChromeDriver potrebbe trovare Chrome da solo
+        logger.debug("Chrome non trovato nei percorsi standard — Selenium proverà comunque")
 
     profile_dir = PROFILES_DIR / profile_name
     profile_dir.mkdir(parents=True, exist_ok=True)
