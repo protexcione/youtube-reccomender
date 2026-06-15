@@ -74,10 +74,9 @@ def get_driver(profile_name: str) -> webdriver.Chrome:
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
 
-    # Riduce il numero di crash del renderer su sistemi con poca RAM
+    # Stabilità su sistemi headless/con poca RAM
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-gpu")
-    options.add_argument("--single-process")
 
     # User-agent specifico del profilo
     ua = USER_AGENTS.get(profile_name, USER_AGENTS["scienza"])
