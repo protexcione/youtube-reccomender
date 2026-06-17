@@ -79,7 +79,7 @@ youtube-reccomender/
 | Giorno | Attività | Stato | Output |
 |--------|----------|-------|--------|
 | Lunedi | Script scraping homepage: 20 raccomandazioni per profilo | ✅ FATTO | `src/scraper.py`, `scrape_homepage.py`, `test_scraper.py` (11/11 test) |
-| Martedi | Database schema per raccomandazioni giornaliere | ❌ DA FARE | tabella `recommendations` già pronta |
+| Martedi | Database schema per raccomandazioni giornaliere | ✅ FATTO | UNIQUE (profile,day,position), query analisi in `src/database.py`, `inspect_db.py`, `test_database_schema.py` (25/25 test) |
 | Mercoledi | Scheduler automatico APScheduler: ogni 24h per 7 giorni | ❌ DA FARE | `scheduler.py` |
 | Gio–Dom | Raccolta automatica in background + monitoraggio logs | ❌ DA FARE | 700 record (5×20×7) |
 | Sabato | Script `get_category()` via scraping pagina video | ❌ DA FARE | categoria per ogni video |

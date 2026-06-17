@@ -23,7 +23,7 @@ def get_connection() -> sqlite3.Connection:
 
 
 def init_db():
-    """Crea le tabelle se non esistono."""
+    """Crea le tabelle e gli indici se non esistono. Esegue migrazioni necessarie."""
     try:
         with get_connection() as conn:
             conn.executescript("""
@@ -50,23 +50,13 @@ def init_db():
 
                 CREATE INDEX IF NOT EXISTS idx_recs_profile_day
                     ON recommendations (profile, day);
+
+                CREATE INDEX IF NOT EXISTS idx_recs_video_id
+                    ON recommendations (video_id);
             """)
 
-            # Aggiunge l'indice UNIQUE solo se non esiste già.
-            # Prima rimuove eventuali duplicati rimasti da run precedenti
-            # (mantiene solo la riga con id più alto per ogni coppia profile/video_id).
-            idx_exists = conn.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='index' AND name='idx_seed_dedup'"
-            ).fetchone()
-            if not idx_exists:
-                conn.executescript("""
-                    DELETE FROM seed_watches
-                    WHERE id NOT IN (
-                        SELECT MAX(id) FROM seed_watches GROUP BY profile, video_id
-                    );
-                    CREATE UNIQUE INDEX idx_seed_dedup ON seed_watches (profile, video_id);
-                """)
-                logger.info("Indice UNIQUE creato su seed_watches (dedup eseguito)")
+            _migrate_seed_watches_dedup(conn)
+            _migrate_recommendations_dedup(conn)
 
         logger.info("Database inizializzato: %s", DB_PATH)
     except sqlite3.Error as e:
@@ -74,9 +64,43 @@ def init_db():
         raise
 
 
+def _migrate_seed_watches_dedup(conn):
+    """Aggiunge UNIQUE (profile, video_id) su seed_watches se non esiste."""
+    exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='index' AND name='idx_seed_dedup'"
+    ).fetchone()
+    if not exists:
+        conn.executescript("""
+            DELETE FROM seed_watches
+            WHERE id NOT IN (
+                SELECT MAX(id) FROM seed_watches GROUP BY profile, video_id
+            );
+            CREATE UNIQUE INDEX idx_seed_dedup ON seed_watches (profile, video_id);
+        """)
+        logger.info("Indice UNIQUE creato su seed_watches (dedup eseguito)")
+
+
+def _migrate_recommendations_dedup(conn):
+    """Aggiunge UNIQUE (profile, day, position) su recommendations se non esiste."""
+    exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='index' AND name='idx_recs_dedup'"
+    ).fetchone()
+    if not exists:
+        conn.executescript("""
+            DELETE FROM recommendations
+            WHERE id NOT IN (
+                SELECT MAX(id) FROM recommendations GROUP BY profile, day, position
+            );
+            CREATE UNIQUE INDEX idx_recs_dedup ON recommendations (profile, day, position);
+        """)
+        logger.info("Indice UNIQUE creato su recommendations (dedup eseguito)")
+
+
+# ── CRUD ────────────────────────────────────────────────────────────────────
+
 def insert_seed_watch(profile: str, video_id: str, title: str, channel: str) -> bool:
     """
-    Inserisce un seed watch. Restituisce True se inserito, False se già presente (duplicato).
+    Inserisce un seed watch. Restituisce True se inserito, False se duplicato.
     """
     try:
         with get_connection() as conn:
@@ -100,11 +124,14 @@ def insert_recommendation(
     profile: str, day: int, position: int,
     video_id: str, title: str, channel: str, category: str = None
 ) -> bool:
-    """Inserisce una raccomandazione. Restituisce True se successo."""
+    """
+    Inserisce una raccomandazione. Usa INSERT OR REPLACE per aggiornare
+    se (profile, day, position) esiste già. Restituisce True se successo.
+    """
     try:
         with get_connection() as conn:
             conn.execute(
-                """INSERT INTO recommendations
+                """INSERT OR REPLACE INTO recommendations
                    (profile, day, position, video_id, title, channel, category, scraped_at)
                    VALUES (?,?,?,?,?,?,?,?)""",
                 (profile, day, position, video_id, title, channel, category,
@@ -116,7 +143,10 @@ def insert_recommendation(
         return False
 
 
+# ── Query base ───────────────────────────────────────────────────────────────
+
 def get_recommendations(profile: str = None, day: int = None) -> list:
+    """Restituisce raccomandazioni filtrate per profilo e/o giorno."""
     query = "SELECT * FROM recommendations WHERE 1=1"
     params = []
     if profile:
@@ -135,7 +165,7 @@ def get_recommendations(profile: str = None, day: int = None) -> list:
 
 
 def get_seed_watch_count(profile: str = None) -> int:
-    """Restituisce il numero di seed watch salvati (per debug/verifica)."""
+    """Restituisce il numero di seed watch salvati."""
     query = "SELECT COUNT(*) FROM seed_watches"
     params = []
     if profile:
@@ -147,3 +177,120 @@ def get_seed_watch_count(profile: str = None) -> int:
     except sqlite3.Error as e:
         logger.error("Errore COUNT seed_watches: %s", e)
         return -1
+
+
+# ── Query analisi (usate dalla Settimana 3) ──────────────────────────────────
+
+def get_days_collected() -> list:
+    """Restituisce i giorni per cui esiste almeno una raccomandazione, ordinati."""
+    try:
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT day FROM recommendations ORDER BY day"
+            ).fetchall()
+            return [r[0] for r in rows]
+    except sqlite3.Error as e:
+        logger.error("Errore get_days_collected: %s", e)
+        return []
+
+
+def get_video_ids(profile: str, day: int) -> set:
+    """
+    Restituisce l'insieme dei video_id raccomandati a un profilo in un giorno.
+    Usato per calcolare Jaccard similarity tra profili.
+    """
+    try:
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT video_id FROM recommendations WHERE profile=? AND day=?",
+                (profile, day)
+            ).fetchall()
+            return {r[0] for r in rows}
+    except sqlite3.Error as e:
+        logger.error("Errore get_video_ids [%s/day%d]: %s", profile, day, e)
+        return set()
+
+
+def get_profile_day_counts() -> list:
+    """
+    Restituisce lista di (profile, day, count) per ogni combinazione presente.
+    Utile per verificare la completezza della raccolta dati.
+    """
+    try:
+        with get_connection() as conn:
+            rows = conn.execute("""
+                SELECT profile, day, COUNT(*) as count
+                FROM recommendations
+                GROUP BY profile, day
+                ORDER BY day, profile
+            """).fetchall()
+            return [dict(r) for r in rows]
+    except sqlite3.Error as e:
+        logger.error("Errore get_profile_day_counts: %s", e)
+        return []
+
+
+def get_top_videos(day: int = None, limit: int = 20) -> list:
+    """
+    Restituisce i video piu' raccomandati (presenti in piu' profili).
+    Se day=None considera tutti i giorni.
+    """
+    params = []
+    day_filter = ""
+    if day is not None:
+        day_filter = "WHERE day = ?"
+        params.append(day)
+    params.append(limit)
+    try:
+        with get_connection() as conn:
+            rows = conn.execute(f"""
+                SELECT video_id, title, channel,
+                       COUNT(DISTINCT profile) as profile_count,
+                       COUNT(*) as total_appearances
+                FROM recommendations
+                {day_filter}
+                GROUP BY video_id
+                ORDER BY profile_count DESC, total_appearances DESC
+                LIMIT ?
+            """, params).fetchall()
+            return [dict(r) for r in rows]
+    except sqlite3.Error as e:
+        logger.error("Errore get_top_videos: %s", e)
+        return []
+
+
+def get_collection_summary() -> dict:
+    """
+    Riepilogo completo dello stato della raccolta dati.
+    Restituisce: giorni raccolti, totale record, record per profilo, completezza %.
+    """
+    from src.config import PROFILES, SIMULATION_DAYS, HOMEPAGE_RECS_COUNT
+    try:
+        total = 0
+        with get_connection() as conn:
+            total = conn.execute("SELECT COUNT(*) FROM recommendations").fetchone()[0]
+
+        days = get_days_collected()
+        counts = get_profile_day_counts()
+
+        expected_total = len(PROFILES) * SIMULATION_DAYS * HOMEPAGE_RECS_COUNT
+        completeness = round(total / expected_total * 100, 1) if expected_total else 0
+
+        per_profile = {}
+        for row in counts:
+            p = row["profile"]
+            if p not in per_profile:
+                per_profile[p] = {"days": 0, "records": 0}
+            per_profile[p]["days"] += 1
+            per_profile[p]["records"] += row["count"]
+
+        return {
+            "days_collected": days,
+            "total_records": total,
+            "expected_total": expected_total,
+            "completeness_pct": completeness,
+            "per_profile": per_profile,
+        }
+    except sqlite3.Error as e:
+        logger.error("Errore get_collection_summary: %s", e)
+        return {}
