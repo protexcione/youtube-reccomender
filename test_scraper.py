@@ -32,13 +32,18 @@ def _make_mock_item(video_id="abc123", title="Test Title", channel="Test Channel
         "title": title,
     }.get(attr, "")
     link.text = title
-    item.find_element.return_value = link
 
-    # Mock channel element
     channel_el = MagicMock()
     channel_el.text = channel
-    item.find_elements.return_value = [channel_el]
 
+    # find_elements (plurale) — primo selettore restituisce il link,
+    # gli altri (channel) restituiscono il channel element
+    def find_elements_side_effect(by, selector):
+        if "video-title" in selector or selector == "h3 a":
+            return [link]
+        return [channel_el]
+
+    item.find_elements.side_effect = find_elements_side_effect
     return item
 
 
