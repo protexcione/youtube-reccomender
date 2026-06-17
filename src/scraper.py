@@ -109,11 +109,17 @@ def scrape_homepage(driver, profile: str, day: int, max_results: int = None, ret
 
     register_success()
 
-    # Scroll per caricare più risultati se necessario
-    _scroll_to_load(driver, max_results, feed_selector)
+    # Azzera implicit_wait durante parsing: find_elements non deve aspettare
+    # 10s per ogni selettore mancante (20 item × 8 selettori = minuti di attesa)
+    driver.implicitly_wait(0)
+    try:
+        # Scroll per caricare più risultati se necessario
+        _scroll_to_load(driver, max_results, feed_selector)
 
-    # Parsing delle card video
-    results = _parse_feed(driver, profile, day, max_results, feed_selector)
+        # Parsing delle card video
+        results = _parse_feed(driver, profile, day, max_results, feed_selector)
+    finally:
+        driver.implicitly_wait(10)  # ripristina per le operazioni successive
 
     logger.info("[%s] Giorno %d: raccolte e salvate %d/%d raccomandazioni", profile, day, len(results), max_results)
     return results
