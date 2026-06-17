@@ -23,10 +23,12 @@ logger = logging.getLogger("yt_recommender")
 HOMEPAGE_URL = "https://www.youtube.com/"
 
 # Selettori per le card video sulla homepage
-# ytd-rich-item-renderer è il container principale del feed homepage
+# YouTube cambia spesso la struttura — usiamo più selettori in ordine di specificità
 _FEED_ITEM_SELECTORS = [
     "ytd-rich-item-renderer",
     "ytd-video-renderer",
+    "ytd-rich-grid-media",
+    "div#contents ytd-rich-item-renderer",
 ]
 
 # Selettori multipli per il titolo video (YouTube cambia spesso)
@@ -124,13 +126,23 @@ def _wait_for_feed(driver, profile: str) -> str | None:
     """
     for selector in _FEED_ITEM_SELECTORS:
         try:
-            WebDriverWait(driver, 15).until(
+            WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, selector))
             )
-            logger.debug("[%s] Feed trovato con selettore: %s", profile, selector)
+            logger.info("[%s] Feed trovato con selettore: %s", profile, selector)
             return selector
         except TimeoutException:
+            logger.debug("[%s] Selettore '%s' non trovato — provo il prossimo", profile, selector)
             continue
+
+    # Ultimo tentativo: cerca qualsiasi link video sulla pagina (fallback generico)
+    try:
+        els = driver.find_elements(By.CSS_SELECTOR, "a[href*='watch?v=']")
+        if els:
+            logger.info("[%s] Fallback: trovati %d link video diretti", profile, len(els))
+            return "_fallback_links"
+    except Exception:
+        pass
 
     # Controlla se è rate limiting silenzioso (pagina caricata ma vuota)
     if check_rate_limited(driver):
@@ -147,6 +159,8 @@ def _scroll_to_load(driver, target: int, selector: str):
     Esegue scroll progressivo verso il basso per caricare più card nel feed.
     Si ferma quando ci sono abbastanza elementi o dopo max_scrolls iterazioni.
     """
+    if selector == "_fallback_links":
+        return
     max_scrolls = 5
     for i in range(max_scrolls):
         current = len(driver.find_elements(By.CSS_SELECTOR, selector))
@@ -163,6 +177,10 @@ def _parse_feed(driver, profile: str, day: int, max_results: int, selector: str)
     """
     Estrae video dal feed, li salva nel DB e restituisce i record inseriti.
     """
+    # Fallback: usa direttamente i link video come "items" da parsare
+    if selector == "_fallback_links":
+        return _parse_fallback_links(driver, profile, day, max_results)
+
     items = driver.find_elements(By.CSS_SELECTOR, selector)
     results = []
     position = 0
@@ -231,6 +249,47 @@ def _extract_channel(item) -> str:
         except Exception:
             continue
     return "Sconosciuto"
+
+
+def _parse_fallback_links(driver, profile: str, day: int, max_results: int) -> list[dict]:
+    """
+    Fallback: estrae video direttamente dai link <a href='watch?v=...'> sulla pagina.
+    Usato quando nessun selettore di feed funziona.
+    """
+    links = driver.find_elements(By.CSS_SELECTOR, "a[href*='watch?v=']")
+    results = []
+    seen = set()
+    position = 0
+
+    for link in links:
+        if len(results) >= max_results:
+            break
+        try:
+            href = link.get_attribute("href") or ""
+            if "watch?v=" not in href:
+                continue
+            video_id = href.split("watch?v=")[1].split("&")[0]
+            if not video_id or video_id in seen:
+                continue
+            seen.add(video_id)
+
+            title = link.get_attribute("title") or link.text or ""
+            title = title.strip()
+            if not title:
+                continue
+
+            saved = insert_recommendation(
+                profile=profile, day=day, position=position,
+                video_id=video_id, title=title, channel="Sconosciuto",
+            )
+            if saved:
+                results.append({"video_id": video_id, "title": title, "channel": "Sconosciuto", "position": position})
+            position += 1
+        except Exception:
+            continue
+
+    logger.info("[%s] Fallback links: salvate %d raccomandazioni", profile, len(results))
+    return results
 
 
 def get_day_recommendation_count(profile: str, day: int) -> int:
