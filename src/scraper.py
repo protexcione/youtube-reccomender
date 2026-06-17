@@ -223,10 +223,15 @@ def _parse_feed(driver, profile: str, day: int, max_results: int, selector: str)
 
 
 def _extract_video_id_and_title(item) -> tuple[str, str]:
-    """Estrae video_id e title da una card del feed. Restituisce ('', '') se non trovato."""
+    """Estrae video_id e title da una card del feed. Restituisce ('', '') se non trovato.
+    Usa find_elements (plurale) per evitare implicit_wait su selettori mancanti.
+    """
     for selector in _TITLE_SELECTORS:
         try:
-            link = item.find_element(By.CSS_SELECTOR, selector)
+            els = item.find_elements(By.CSS_SELECTOR, selector)
+            if not els:
+                continue
+            link = els[0]
             href = link.get_attribute("href") or ""
             if "watch?v=" not in href:
                 continue
