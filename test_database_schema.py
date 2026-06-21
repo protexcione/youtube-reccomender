@@ -1,6 +1,6 @@
 """
-Test Martedi Settimana 2: schema DB raccomandazioni giornaliere.
-Verifica vincoli, migrazioni, query analisi. Nessun browser richiesto.
+Test schema DB raccomandazioni giornaliere.
+Verifica vincoli UNIQUE, migrazioni e query di analisi. Nessun browser richiesto.
 
 Esegui con:
   python test_database_schema.py
@@ -124,7 +124,7 @@ class TestRecommendationsDedup(unittest.TestCase):
 
 
 class TestQueryHelpers(unittest.TestCase):
-    """Verifica le query di analisi per la Settimana 3."""
+    """Verifica le query di analisi dei dati raccolti."""
 
     def setUp(self):
         self.db_path, self.orig = _setup_tmp_db(src.database)

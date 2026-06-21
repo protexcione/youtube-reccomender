@@ -1,5 +1,5 @@
 """
-Analisi Settimana 3 — Mercoledi: Entropia H per giorno per profilo.
+Analisi entropia di Shannon H per profilo nel tempo (diversity decay).
 
 Entropia di Shannon H = -Σ p_i * log2(p_i)
 Applicata alla distribuzione dei video_id per profilo×giorno.

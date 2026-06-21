@@ -1,5 +1,5 @@
 """
-Analisi Settimana 3 — Venerdi: Grafo convergenza NetworkX.
+Grafo di convergenza NetworkX tra profili basato su Jaccard similarity.
 
 Nodi = profili (5), archi = Jaccard similarity per giorno.
 Produce un grafo per ogni giorno + un grafo animato (GIF) che mostra

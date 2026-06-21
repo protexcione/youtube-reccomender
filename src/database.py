@@ -179,7 +179,7 @@ def get_seed_watch_count(profile: str = None) -> int:
         return -1
 
 
-# ── Query analisi (usate dalla Settimana 3) ──────────────────────────────────
+# ── Query analisi ────────────────────────────────────────────────────────────
 
 def get_days_collected() -> list:
     """Restituisce i giorni per cui esiste almeno una raccomandazione, ordinati."""

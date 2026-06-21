@@ -1,5 +1,5 @@
 """
-Modulo analisi dati — Settimana 3.
+Modulo analisi dati: Jaccard, overlap, entropia, statistiche cross-profilo.
 Calcola Jaccard similarity, overlap %, entropia e statistiche per le visualizzazioni.
 """
 

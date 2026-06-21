@@ -1,5 +1,5 @@
 """
-Venerdi Settimana 1 — Test end-to-end: 1 profilo completo da zero a seed watching.
+Test end-to-end: 1 profilo completo da zero a seed watching.
 
 Simula lo scenario di un nuovo utente: azzera il profilo scelto,
 esegue setup → seed watching → verifica DB, e produce un report.
@@ -355,7 +355,7 @@ def main():
         sys.exit(1)
 
     print("=" * 60)
-    print(f"TEST END-TO-END — Venerdi Settimana 1")
+    print(f"TEST END-TO-END — Pipeline completa")
     print(f"Profilo: {profile.upper()} | Keep data: {keep_data}")
     print(f"Avvio: {datetime.now().strftime('%H:%M:%S')}")
     print("=" * 60)

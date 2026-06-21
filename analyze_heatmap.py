@@ -1,5 +1,5 @@
 """
-Analisi Settimana 3 — Giovedi: Heatmap profilo × categoria × giorno.
+Analisi heatmap distribuzione categorie per profilo e giorno.
 
 La categoria è inferita da titolo+canale via keyword (src/categorizer.py),
 poiché non raccolta via scraping (settimana 2 sabato saltata).

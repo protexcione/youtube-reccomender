@@ -3,7 +3,7 @@ Scraping della homepage YouTube per raccogliere raccomandazioni.
 Ogni profilo visita https://www.youtube.com/ e salva le prime
 HOMEPAGE_RECS_COUNT raccomandazioni nel DB.
 
-Usato dallo scheduler (Settimana 2) e da scrape_homepage.py.
+Usato dallo scheduler e da scrape_homepage.py.
 """
 
 import time

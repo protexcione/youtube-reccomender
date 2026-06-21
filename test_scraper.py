@@ -1,5 +1,5 @@
 """
-Test Lunedi Settimana 2: scraping homepage YouTube.
+Test scraping homepage YouTube.
 Verifica il modulo src/scraper.py senza browser (mock Selenium).
 
 Esegui con:

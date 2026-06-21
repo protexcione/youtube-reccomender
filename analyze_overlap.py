@@ -1,5 +1,5 @@
 """
-Analisi Settimana 3 — Martedi: Overlap % giornaliero + trend temporale.
+Analisi overlap % giornaliero e trend temporale tra profili.
 
 Overlap% = |A ∩ B| / min(|A|, |B|) × 100  (quanto del profilo minore
            è già visto dall'altro profilo — più intuitivo del Jaccard).

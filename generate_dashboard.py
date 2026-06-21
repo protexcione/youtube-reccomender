@@ -1,5 +1,5 @@
 """
-Settimana 3 — Sabato: Dashboard riassuntiva.
+Dashboard riassuntiva con tutti i grafici e le metriche chiave.
 
 Genera un report HTML con tutti i grafici e le metriche chiave,
 e un PDF (se weasyprint è disponibile, altrimenti solo HTML).

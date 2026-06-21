@@ -1,5 +1,5 @@
 """
-Giovedi Settimana 1 — Cookie persistence + profili Chrome verificati.
+Verifica cookie persistence e isolamento tra profili Chrome.
 
 Verifica tre proprietà critiche:
   1. Persistenza: i cookie scritti in sessione 1 sopravvivono alla chiusura del browser
@@ -244,7 +244,7 @@ def test_profile_filesystem(profile_name: str) -> bool:
 
 def print_report(results: dict):
     print("\n" + "=" * 60)
-    print("REPORT VERIFICA COOKIE — Giovedi Settimana 1")
+    print("REPORT VERIFICA COOKIE")
     print("=" * 60)
 
     all_ok = True

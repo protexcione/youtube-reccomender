@@ -1,5 +1,5 @@
 """
-Test Giovedi — Cookie persistence + profili Chrome verificati.
+Test cookie persistence e isolamento profili Chrome (senza browser).
 Eseguibile senza browser (verifica struttura filesystem e snapshot).
 Per test completi con browser: python verify_cookies.py
 

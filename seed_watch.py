@@ -1,6 +1,6 @@
 """
-Script Mercoledi Settimana 1:
-Ogni profilo cerca i suoi canali seed e guarda 10 video.
+Seed watching: ogni profilo cerca i suoi canali seed e guarda i video iniziali.
+Serve a "addestrare" il profilo prima della raccolta dati.
 
 Esegui con:
   python seed_watch.py              # tutti i profili

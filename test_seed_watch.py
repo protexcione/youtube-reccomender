@@ -1,5 +1,5 @@
 """
-Test Mercoledi: verifica ricerca video e visione per UN solo profilo.
+Test ricerca video e seed watching per un singolo profilo.
 Guarda solo 2 video (non 10) per tenere il test veloce.
 
 Esegui con: python test_seed_watch.py scienza

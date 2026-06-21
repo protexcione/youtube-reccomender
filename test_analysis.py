@@ -1,5 +1,5 @@
 """
-Test Settimana 3 — Lunedi: Jaccard similarity e funzioni di analisi.
+Test funzioni di analisi: Jaccard, overlap, entropia, ripetizione.
 
 Esegui con:
   python test_analysis.py

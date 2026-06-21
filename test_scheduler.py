@@ -1,5 +1,5 @@
 """
-Test Mercoledi Settimana 2: scheduler APScheduler.
+Test scheduler APScheduler.
 Verifica logica di stato, rilevamento giorno e configurazione job.
 Nessun browser, nessuna attesa reale.
 

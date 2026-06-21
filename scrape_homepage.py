@@ -1,6 +1,6 @@
 """
-Script Lunedi Settimana 2:
-Ogni profilo visita la homepage YouTube e raccoglie 20 raccomandazioni.
+Raccolta raccomandazioni dalla homepage YouTube.
+Ogni profilo visita la homepage e salva le prime N raccomandazioni nel DB.
 
 Uso:
   python scrape_homepage.py                  # tutti i profili, giorno auto

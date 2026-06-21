@@ -1,5 +1,5 @@
 """
-Scheduler automatico — Mercoledi Settimana 2.
+Scheduler automatico per la raccolta dati giornaliera.
 Esegue lo scraping della homepage ogni 24h per SIMULATION_DAYS giorni.
 
 Uso:
@@ -138,7 +138,7 @@ def _print_final_summary():
     print(f"  Record totali: {s.get('total_records', 0)} / {s.get('expected_total', 0)}")
     print(f"  Completezza:   {s.get('completeness_pct', 0)}%")
     print(f"  Giorni:        {s.get('days_collected', [])}")
-    print("\nPuoi procedere con l'analisi: Settimana 3")
+    print("\nPuoi procedere con l'analisi dei dati raccolti.")
 
 
 # ── Listener eventi ──────────────────────────────────────────────────────────

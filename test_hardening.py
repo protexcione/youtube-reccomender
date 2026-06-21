@@ -1,7 +1,6 @@
 """
-Test Sabato Settimana 1: Debug + Hardening
-Verifica che tutte le protezioni implementate funzionino correttamente
-senza richiedere un browser reale (usa mock/unit test).
+Test hardening: verifica rate limiter, gestione crash, retry e robustezza.
+Non richiede un browser reale (usa mock/unit test).
 
 Esegui con:
   python test_hardening.py

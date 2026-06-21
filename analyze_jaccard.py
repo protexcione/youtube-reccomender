@@ -1,5 +1,5 @@
 """
-Analisi Settimana 3 — Lunedi: Jaccard similarity tra profili per ogni giorno.
+Analisi Jaccard similarity tra profili per ogni giorno di raccolta.
 
 Produce:
   - reports/jaccard_matrix_dayN.png  (heatmap 5×5 per ogni giorno)
