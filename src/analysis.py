@@ -118,18 +118,56 @@ def entropy(video_ids: set, all_recs: list) -> float:
     return h
 
 
+def cumulative_entropy_per_profile(up_to_day: int, profile: str) -> float:
+    """
+    Entropia cumulativa: considera tutti i video visti dal profilo
+    fino al giorno `up_to_day` (incluso).
+    Se gli stessi video si ripetono tra giorni diversi, H è più bassa.
+    H max = log2(up_to_day * 20) se tutti i video sono unici.
+    """
+    recs = [r for r in get_recommendations(profile=profile)
+            if r["day"] <= up_to_day]
+    if not recs:
+        return 0.0
+    ids = {r["video_id"] for r in recs}
+    return entropy(ids, recs)
+
+
 def entropy_per_profile_per_day() -> dict:
     """
-    Restituisce {profile: {day: H}} per tutti i profili e giorni.
-    H calcolato sulla distribuzione dei video_id nelle raccomandazioni del giorno.
+    Restituisce {profile: {day: H_cumulativa}} per tutti i profili e giorni.
+    H calcolata su tutti i video visti fino a quel giorno — se gli stessi
+    video si ripetono tra giorni, H è inferiore al massimo teorico.
     """
     days = get_days_collected()
     result = {p: {} for p in PROFILE_LIST}
     for day in days:
         for profile in PROFILE_LIST:
-            recs = get_recommendations(profile=profile, day=day)
-            ids = {r["video_id"] for r in recs}
-            result[profile][day] = entropy(ids, recs)
+            result[profile][day] = cumulative_entropy_per_profile(day, profile)
+    return result
+
+
+def repetition_rate_per_profile() -> dict:
+    """
+    Per ogni profilo: quanti video appaiono in più di un giorno?
+    Restituisce {profile: {"repeated": n, "total_unique": n, "rate_pct": float}}.
+    """
+    result = {}
+    for profile in PROFILE_LIST:
+        recs = get_recommendations(profile=profile)
+        from collections import Counter
+        day_sets = {}
+        for r in recs:
+            day_sets.setdefault(r["day"], set()).add(r["video_id"])
+        all_vids = [r["video_id"] for r in recs]
+        freq = Counter(all_vids)
+        repeated = sum(1 for v, c in freq.items() if c > 1)
+        total_unique = len(freq)
+        result[profile] = {
+            "repeated": repeated,
+            "total_unique": total_unique,
+            "rate_pct": repeated / total_unique * 100 if total_unique else 0.0,
+        }
     return result
 
 

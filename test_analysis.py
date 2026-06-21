@@ -20,6 +20,7 @@ from src.analysis import (
     jaccard, jaccard_matrix, jaccard_over_time, mean_jaccard_per_day,
     overlap_percent, overlap_over_time, mean_overlap_per_day,
     entropy, entropy_per_profile_per_day, mean_entropy_per_day,
+    repetition_rate_per_profile,
     cross_profile_video_counts, PROFILE_LIST,
 )
 
@@ -215,6 +216,12 @@ class TestEntropy(unittest.TestCase):
         mpd = mean_entropy_per_day(epd)
         self.assertIn(1, mpd)
         self.assertGreaterEqual(mpd[1], 0.0)
+
+    def test_repetition_rate_no_repeats(self):
+        rep = repetition_rate_per_profile()
+        self.assertIn("scienza", rep)
+        # Con 4 video unici nel giorno 1, tasso ripetizione = 0
+        self.assertEqual(rep["scienza"]["rate_pct"], 0.0)
 
 
 class TestCrossProfileCounts(unittest.TestCase):
