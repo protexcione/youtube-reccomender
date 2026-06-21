@@ -81,14 +81,14 @@ youtube-reccomender/
 | Lunedi | Script scraping homepage: 20 raccomandazioni per profilo | ✅ FATTO | `src/scraper.py`, `scrape_homepage.py`, `test_scraper.py` (11/11 test) |
 | Martedi | Database schema per raccomandazioni giornaliere | ✅ FATTO | UNIQUE (profile,day,position), query analisi in `src/database.py`, `inspect_db.py`, `test_database_schema.py` (25/25 test) |
 | Mercoledi | Scheduler automatico APScheduler: ogni 24h per 7 giorni | ✅ FATTO | `scheduler.py`, `test_scheduler.py` (14/14 test) |
-| Gio–Dom | Raccolta automatica in background + monitoraggio logs | ❌ DA FARE | 700 record (5×20×7) |
-| Sabato | Script `get_category()` via scraping pagina video | ❌ DA FARE | categoria per ogni video |
+| Gio–Dom | Raccolta automatica in background + monitoraggio logs | ✅ FATTO | 700 record (5×20×7) — raccolta manuale giorni 1-7 |
+| Sabato | Script `get_category()` via scraping pagina video | ⏭ SKIP | categoria non disponibile senza API; analisi procede senza |
 
 ### SETTIMANA 3 — Analisi & Visualizzazioni (50 ore)
 
 | Giorno | Attività | Stato | Output |
 |--------|----------|-------|--------|
-| Lunedi | Jaccard similarity tra profili per ogni giorno | ❌ DA FARE | matrice 5×5×7 |
+| Lunedi | Jaccard similarity tra profili per ogni giorno | ✅ FATTO | `src/analysis.py`, `analyze_jaccard.py`, `test_analysis.py` (24/24 test) |
 | Martedi | Overlap % giornaliero + trend temporale | ❌ DA FARE | tabella + plot |
 | Mercoledi | Entropia H per giorno per profilo (diversity decay) | ❌ DA FARE | grafo H(t) |
 | Giovedi | Heatmap profilo × categoria × giorno | ❌ DA FARE | heatmap matplotlib |
