@@ -92,7 +92,7 @@ youtube-reccomender/
 | Martedi | Overlap % giornaliero + trend temporale | ✅ FATTO | `analyze_overlap.py` — trend + heatmap coppia×giorno |
 | Mercoledi | Entropia H per giorno per profilo (diversity decay) | ✅ FATTO | `analyze_entropy.py` — entropy_trend.png, entropy_mean.png |
 | Giovedi | Heatmap profilo × categoria × giorno | ✅ FATTO | `src/categorizer.py`, `analyze_heatmap.py` — keyword classifier, 2 heatmap |
-| Venerdi | Grafo convergenza NetworkX (nodi=profili, archi=Jaccard) | ❌ DA FARE | grafo animato |
+| Venerdi | Grafo convergenza NetworkX (nodi=profili, archi=Jaccard) | ✅ FATTO | `analyze_graph.py` — graph_dayN.png + graph_convergence.gif |
 | Sabato | Dashboard riassuntiva: tutti i grafici in PDF/HTML | ❌ DA FARE | report visuale |
 
 ### SETTIMANA 4 — Analisi Accademica & Scrittura (40 ore)
