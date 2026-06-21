@@ -164,28 +164,44 @@ def print_summary(counts: dict, cat_day_counts: dict, days: list) -> str:
     lines.append(row)
     lines.append("=" * 70)
 
-    # Categoria dominante per profilo
-    lines.append("\nCATEGORIA DOMINANTE PER PROFILO")
+    # Nota sul classificatore
+    altro_pct = cat_totals.get("Altro", 0) / grand * 100
+    classified = grand - cat_totals.get("Altro", 0)
+    lines.append(f"\nNota metodologica: {altro_pct:.0f}% dei video non classificati da keyword")
+    lines.append(f"Video classificati: {classified}/{grand} ({100-altro_pct:.0f}%)")
+
+    # Categoria dominante per profilo (esclude Altro)
+    lines.append("\nCATEGORIA DOMINANTE PER PROFILO (escluso 'Altro')")
     for profile in PROFILE_LIST:
-        if counts[profile]:
-            dom = max(counts[profile], key=counts[profile].get)
-            pct = counts[profile][dom] / sum(counts[profile].values()) * 100
-            lines.append(f"  {profile:<10}  {dom}  ({pct:.0f}%)")
+        filtered = {k: v for k, v in counts[profile].items() if k != "Altro"}
+        if filtered:
+            dom = max(filtered, key=filtered.get)
+            pct = filtered[dom] / sum(counts[profile].values()) * 100
+            lines.append(f"  {profile:<10}  {dom}  ({pct:.0f}% del totale profilo)")
 
-    # Categoria più trasversale (presente in più profili)
-    lines.append("\nCATEGORIA PIÙ TRASVERSALE (% su totale raccomandazioni)")
-    sorted_cats = sorted(cat_totals.items(), key=lambda x: x[1], reverse=True)
-    for cat, tot in sorted_cats[:5]:
-        lines.append(f"  {cat:<22}  {tot:>4} video  ({tot/grand*100:.1f}%)")
-
-    # Verifica H3
-    top_cat = sorted_cats[0][0]
-    top_pct = sorted_cats[0][1] / grand * 100
-    h3_note = (
-        f"CONFERMATA — '{top_cat}' cattura {top_pct:.0f}% delle raccomandazioni totali"
-        if top_pct > 30
-        else f"PARZIALE — nessuna categoria supera il 30% (massimo: {top_cat} {top_pct:.0f}%)"
+    # Categoria più trasversale tra quelle classificate (escluso Altro)
+    sorted_cats_no_altro = sorted(
+        [(c, t) for c, t in cat_totals.items() if c != "Altro"],
+        key=lambda x: x[1], reverse=True
     )
+    lines.append("\nCATEGORIE PIÙ TRASVERSALI (escluso 'Altro')")
+    for cat, tot in sorted_cats_no_altro[:5]:
+        # Conta in quanti profili appare almeno 1 video di questa categoria
+        n_profiles = sum(1 for p in PROFILE_LIST if counts[p].get(cat, 0) > 0)
+        lines.append(f"  {cat:<22}  {tot:>4} video  ({tot/grand*100:.1f}%)  [{n_profiles}/5 profili]")
+
+    # Verifica H3 — escludi Altro
+    if sorted_cats_no_altro:
+        top_cat, top_tot = sorted_cats_no_altro[0]
+        top_pct = top_tot / grand * 100
+        n_profiles_top = sum(1 for p in PROFILE_LIST if counts[p].get(top_cat, 0) > 0)
+        h3_note = (
+            f"CONFERMATA — '{top_cat}' appare in {n_profiles_top}/5 profili ({top_pct:.1f}% del totale)"
+            if n_profiles_top >= 4
+            else f"PARZIALE — '{top_cat}' presente in {n_profiles_top}/5 profili ({top_pct:.1f}%)"
+        )
+    else:
+        h3_note = "NON VALUTABILE — classificazione insufficiente"
     lines.append(f"\nIpotesi H3 (categoria 'calamita'): {h3_note}")
     lines.append("")
 
