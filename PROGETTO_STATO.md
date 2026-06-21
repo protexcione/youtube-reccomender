@@ -89,7 +89,7 @@ youtube-reccomender/
 | Giorno | Attività | Stato | Output |
 |--------|----------|-------|--------|
 | Lunedi | Jaccard similarity tra profili per ogni giorno | ✅ FATTO | `src/analysis.py`, `analyze_jaccard.py`, `test_analysis.py` (24/24 test) |
-| Martedi | Overlap % giornaliero + trend temporale | ❌ DA FARE | tabella + plot |
+| Martedi | Overlap % giornaliero + trend temporale | ✅ FATTO | `analyze_overlap.py` — trend + heatmap coppia×giorno |
 | Mercoledi | Entropia H per giorno per profilo (diversity decay) | ❌ DA FARE | grafo H(t) |
 | Giovedi | Heatmap profilo × categoria × giorno | ❌ DA FARE | heatmap matplotlib |
 | Venerdi | Grafo convergenza NetworkX (nodi=profili, archi=Jaccard) | ❌ DA FARE | grafo animato |
